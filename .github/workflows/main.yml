@@ -23,6 +23,22 @@ jobs:
           release_name: ${{ github.ref }}
           draft: false
           prerelease: false
+  build_android:
+    strategy:
+      matrix:
+        arch: [ "armeabi-v7a", "arm64-v8a", "x86", "x86_64" ]
+      fail-fast: false
+    name: "android build"
+    runs-on: ubuntu-latest
+    needs: create_release
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build ${{matrix.arch}}
+        run: |
+          cmake . -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DANDROID_PLATFORM=android-21 -DANDROID_ABI=${{matrix.arch}} -DANDROID_STL=c++_static -DCMAKE_INSTALL_PREFIX=$PWD/piper -B build
+          cmake --build build
+          cmake --install build
+          tar -czf piper_android_${{matrix.arch}}.tar.gz piper
   build_linux:
     name: "linux build"
     runs-on: ubuntu-latest
