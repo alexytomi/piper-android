@@ -13,7 +13,6 @@ htmlcov
 /build/
 /local/
 /dist/
-/lib/
 /install/
 /download/
 *.so

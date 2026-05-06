@@ -16,7 +16,19 @@ elseif(NOT APPLE)
   string(APPEND CMAKE_CXX_FLAGS " -Wall -Wextra -Wl,-rpath,'$ORIGIN'")
   string(APPEND CMAKE_C_FLAGS " -Wall -Wextra")
 endif()
-
+if(ANDROID)
+  set(ANDROID_EXTERNAL_ARG
+      -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+      -DANDROID_ABI=${ANDROID_ABI}
+      -DANDROID_PLATFORM=${ANDROID_PLATFORM}
+      -DANDROID_NDK=${ANDROID_NDK}
+      -DANDROID_STL=${ANDROID_STL}
+      -DCMAKE_ANDROID_STL_TYPE=${CMAKE_ANDROID_STL_TYPE}
+      -DCMAKE_SYSTEM_NAME=Android
+      -DCMAKE_SYSTEM_VERSION=${CMAKE_SYSTEM_VERSION}
+  )
+endif()
+set(SUBMODULE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib")
 add_executable(piper src/cpp/main.cpp src/cpp/piper.cpp)
 add_executable(test_piper src/cpp/test.cpp src/cpp/piper.cpp)
 
@@ -32,8 +44,8 @@ if(NOT DEFINED FMT_DIR)
   include(ExternalProject)
   ExternalProject_Add(
     fmt_external
-    PREFIX "${CMAKE_CURRENT_BINARY_DIR}/f"
-    URL "https://github.com/fmtlib/fmt/archive/refs/tags/${FMT_VERSION}.zip"
+    SOURCE_DIR "${SUBMODULE_DIR}/fmt"
+    CMAKE_ARGS ${ANDROID_EXTERNAL_ARG}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${FMT_DIR}
     CMAKE_ARGS -DFMT_TEST:BOOL=OFF  # Don't build all the tests
   )
@@ -48,9 +60,9 @@ if(NOT DEFINED SPDLOG_DIR)
   set(SPDLOG_VERSION "1.12.0")
   ExternalProject_Add(
     spdlog_external
-    PREFIX "${CMAKE_CURRENT_BINARY_DIR}/s"
-    URL "https://github.com/gabime/spdlog/archive/refs/tags/v${SPDLOG_VERSION}.zip"
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${SPDLOG_DIR}
+    SOURCE_DIR "${SUBMODULE_DIR}/spdlog"
+    CMAKE_ARGS ${ANDROID_EXTERNAL_ARG} -DCMAKE_INSTALL_PREFIX:PATH=${SPDLOG_DIR}
   )
   add_dependencies(piper spdlog_external)
   add_dependencies(test_piper spdlog_external)
@@ -62,9 +74,8 @@ if(NOT DEFINED PIPER_PHONEMIZE_DIR)
   set(PIPER_PHONEMIZE_DIR "${CMAKE_CURRENT_BINARY_DIR}/pi")
   ExternalProject_Add(
     piper_phonemize_external
-    PREFIX "${CMAKE_CURRENT_BINARY_DIR}/p"
-    URL "https://github.com/rhasspy/piper-phonemize/archive/refs/heads/master.zip"
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${PIPER_PHONEMIZE_DIR}
+    SOURCE_DIR "${SUBMODULE_DIR}/piper-phonemize-android"
+    CMAKE_ARGS ${ANDROID_EXTERNAL_ARG} -DANDROID_EXTERNAL_ARG=${ANDROID_EXTERNAL_ARG} -DCMAKE_INSTALL_PREFIX:PATH=${PIPER_PHONEMIZE_DIR}
   )
   add_dependencies(piper piper_phonemize_external)
   add_dependencies(test_piper piper_phonemize_external)
