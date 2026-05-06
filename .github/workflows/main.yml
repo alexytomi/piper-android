@@ -7,30 +7,33 @@ on:
       - "*"
 
 jobs:
-  create_release:
-    name: Create release
-    runs-on: ubuntu-latest
-    outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
-    steps:
-      - name: Create release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
-          draft: false
-          prerelease: false
+  # create_release:
+  #   name: Create release
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: write
+  #   outputs:
+  #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+  #   steps:
+  #     - name: Create release
+  #       id: create_release
+  #       uses: actions/create-release@v1
+  #       env:
+  #         GITHUB_TOKEN: ${{ github.token }}
+  #       with:
+  #         tag_name: ${{ github.ref }}
+  #         release_name: ${{ github.ref }}
+  #         draft: false
+  #         prerelease: false
   build_android:
     strategy:
       matrix:
         arch: [ "armeabi-v7a", "arm64-v8a", "x86", "x86_64" ]
       fail-fast: false
+    permissions:
+      contents: write
     name: "android build"
     runs-on: ubuntu-latest
-    needs: create_release
     steps:
       - uses: actions/checkout@v3
       - name: Build ${{matrix.arch}}
@@ -40,14 +43,11 @@ jobs:
           cmake --install build
           tar -czf piper_android_${{matrix.arch}}.tar.gz piper
       - name: upload ${{matrix.arch}}
-        uses: actions/upload-release-asset@v1
+        uses: softprops/action-gh-release@v3
+        with:
+          files: piper_android_${{matrix.arch}}.tar.gz
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        with:
-          upload_url: ${{ needs.create_release.outputs.upload_url }}
-          asset_path: piper_android_${{matrix.arch}}.tar.gz
-          asset_name: piper_android_${{matrix.arch}}.tar.gz
-          asset_content_type: application/octet-stream
   # build_linux:
   #   name: "linux build"
   #   runs-on: ubuntu-latest
