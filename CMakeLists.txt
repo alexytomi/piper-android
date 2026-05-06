@@ -90,9 +90,13 @@ if((NOT MSVC) AND (NOT APPLE))
   # Linux flags
   string(APPEND CMAKE_CXX_FLAGS " -Wall -Wextra -Wl,-rpath,'$ORIGIN'")
   string(APPEND CMAKE_C_FLAGS " -Wall -Wextra")
-  target_link_libraries(piper -static-libgcc -static-libstdc++)
-
-  set(PIPER_EXTRA_LIBRARIES "pthread")
+  if(NOT ANDROID)
+      target_link_libraries(piper -static-libgcc -static-libstdc++)
+      set(PIPER_EXTRA_LIBRARIES "pthread") # Only add for standard Linux
+  else()
+      # On Android, pthreads are in libc, so we leave PIPER_EXTRA_LIBRARIES empty
+      set(PIPER_EXTRA_LIBRARIES "")
+  endif()
 endif()
 
 target_link_libraries(piper
