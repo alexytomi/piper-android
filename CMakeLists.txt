@@ -75,7 +75,7 @@ if(NOT DEFINED PIPER_PHONEMIZE_DIR)
   ExternalProject_Add(
     piper_phonemize_external
     SOURCE_DIR "${SUBMODULE_DIR}/piper-phonemize-android"
-    CMAKE_ARGS ${ANDROID_EXTERNAL_ARG} -DANDROID_EXTERNAL_ARG=${ANDROID_EXTERNAL_ARG} -DCMAKE_INSTALL_PREFIX:PATH=${PIPER_PHONEMIZE_DIR}
+    CMAKE_ARGS ${ANDROID_EXTERNAL_ARG} -DCMAKE_INSTALL_PREFIX:PATH=${PIPER_PHONEMIZE_DIR}
   )
   add_dependencies(piper piper_phonemize_external)
   add_dependencies(test_piper piper_phonemize_external)
@@ -87,9 +87,13 @@ if((NOT MSVC) AND (NOT APPLE))
   # Linux flags
   string(APPEND CMAKE_CXX_FLAGS " -Wall -Wextra -Wl,-rpath,'$ORIGIN'")
   string(APPEND CMAKE_C_FLAGS " -Wall -Wextra")
-  target_link_libraries(piper -static-libgcc -static-libstdc++)
-
-  set(PIPER_EXTRA_LIBRARIES "pthread")
+  if(NOT ANDROID)
+      target_link_libraries(piper -static-libgcc -static-libstdc++)
+      set(PIPER_EXTRA_LIBRARIES "pthread") # Only add for standard Linux
+  else()
+      # On Android, pthreads are in libc, so we leave PIPER_EXTRA_LIBRARIES empty
+      set(PIPER_EXTRA_LIBRARIES "")
+  endif()
 endif()
 
 target_link_libraries(piper
